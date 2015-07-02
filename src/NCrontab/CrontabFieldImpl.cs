@@ -30,17 +30,17 @@ namespace NCrontab
 
     #endregion
 
-    public delegate T CrontabFieldAccumulator<T>(int start, int end, int interval, T successs, Converter<ExceptionProvider, T> onError);
+    public delegate T CrontabFieldAccumulator<T>(int start, int end, int interval, int occurrence, T successs, Converter<ExceptionProvider, T> onError);
 
     [ Serializable ]
     public sealed class CrontabFieldImpl : IObjectReference
     {
-        public static readonly CrontabFieldImpl Second    = new CrontabFieldImpl(CrontabFieldKind.Second, 0, 59, null);
-        public static readonly CrontabFieldImpl Minute    = new CrontabFieldImpl(CrontabFieldKind.Minute, 0, 59, null);
-        public static readonly CrontabFieldImpl Hour      = new CrontabFieldImpl(CrontabFieldKind.Hour, 0, 23, null);
-        public static readonly CrontabFieldImpl Day       = new CrontabFieldImpl(CrontabFieldKind.Day, 1, 31, null);
-        public static readonly CrontabFieldImpl Month     = new CrontabFieldImpl(CrontabFieldKind.Month, 1, 12, new[] { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" });
-        public static readonly CrontabFieldImpl DayOfWeek = new CrontabFieldImpl(CrontabFieldKind.DayOfWeek, 0, 6, new[] { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" });
+        public static readonly CrontabFieldImpl Second    = new CrontabFieldImpl(CrontabFieldKind.Second, 0, 59, null, false);
+        public static readonly CrontabFieldImpl Minute    = new CrontabFieldImpl(CrontabFieldKind.Minute, 0, 59, null, false);
+        public static readonly CrontabFieldImpl Hour      = new CrontabFieldImpl(CrontabFieldKind.Hour, 0, 23, null, false);
+        public static readonly CrontabFieldImpl Day       = new CrontabFieldImpl(CrontabFieldKind.Day, 1, 31, null, false);
+        public static readonly CrontabFieldImpl Month     = new CrontabFieldImpl(CrontabFieldKind.Month, 1, 12, new[] { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" }, false);
+        public static readonly CrontabFieldImpl DayOfWeek = new CrontabFieldImpl(CrontabFieldKind.DayOfWeek, 0, 6, new[] { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" }, true);
 
         static readonly CrontabFieldImpl[] FieldByKind = { Second, Minute, Hour, Day, Month, DayOfWeek };
 
@@ -50,6 +50,7 @@ namespace NCrontab
         readonly int _minValue;
         readonly int _maxValue;
         readonly string[] _names;
+        readonly bool _occurrenceAllowed;
 
         public static CrontabFieldImpl FromKind(CrontabFieldKind kind)
         {
@@ -63,7 +64,7 @@ namespace NCrontab
             return FieldByKind[(int) kind];
         }
 
-        CrontabFieldImpl(CrontabFieldKind kind, int minValue, int maxValue, string[] names)
+        CrontabFieldImpl(CrontabFieldKind kind, int minValue, int maxValue, string[] names, bool occurrenceAllowed)
         {
             Debug.Assert(Enum.IsDefined(typeof(CrontabFieldKind), kind));
             Debug.Assert(minValue >= 0);
@@ -74,6 +75,7 @@ namespace NCrontab
             _minValue = minValue;
             _maxValue = maxValue;
             _names = names;
+            _occurrenceAllowed = occurrenceAllowed;
         }
 
         public CrontabFieldKind Kind
@@ -94,6 +96,11 @@ namespace NCrontab
         public int ValueCount
         {
             get { return _maxValue - _minValue + 1; }
+        }
+
+        public bool OccurrenceAllowed
+        {
+            get { return _occurrenceAllowed; }
         }
 
         public void Format(ICrontabField field, TextWriter writer)
@@ -245,8 +252,9 @@ namespace NCrontab
                     result = InternalParse(token.Current, acc, success, errorSelector);
                 return result;
             }
-            
+
             var every = 1;
+            var occurrence = 0;
 
             //
             // Look for stepping first (e.g. */2 = every 2nd).
@@ -261,12 +269,24 @@ namespace NCrontab
             }
 
             //
+            // Look for occurrence order (e.g. 1#2 = every 2nd monday of month).
+            // 
+
+            var hashIndex = str.IndexOf("#");
+
+            if (hashIndex > 0)
+            {
+                occurrence = int.Parse(str.Substring(hashIndex + 1), CultureInfo.InvariantCulture);
+                str = str.Substring(0, hashIndex);
+            }
+
+            //
             // Next, look for wildcard (*).
             //
     
             if (str.Length == 1 && str[0]== '*')
             {
-                return acc(-1, -1, every, success, errorSelector);
+                return acc(-1, -1, every, occurrence, success, errorSelector);
             }
 
             //
@@ -280,7 +300,7 @@ namespace NCrontab
                 var first = ParseValue(str.Substring(0, dashIndex));
                 var last = ParseValue(str.Substring(dashIndex + 1));
 
-                return acc(first, last, every, success, errorSelector);
+                return acc(first, last, every, occurrence, success, errorSelector);
             }
 
             //
@@ -290,10 +310,10 @@ namespace NCrontab
             var value = ParseValue(str);
 
             if (every == 1)
-                return acc(value, value, 1, success, errorSelector);
+                return acc(value, value, 1, occurrence, success, errorSelector);
 
             Debug.Assert(every != 0);
-            return acc(value, _maxValue, every, success, errorSelector);
+            return acc(value, _maxValue, every, occurrence, success, errorSelector);
         }
 
         int ParseValue(string str)

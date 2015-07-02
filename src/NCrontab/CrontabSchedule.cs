@@ -57,7 +57,7 @@ namespace NCrontab
         // * * * * *
         // - - - - -
         // | | | | |
-        // | | | | +----- day of week (0 - 6) (Sunday=0)
+        // | | | | +----- day of week (0 - 6) (Sunday=0) (# occurrence sign)
         // | | | +------- month (1 - 12)
         // | | +--------- day of month (1 - 31)
         // | +----------- hour (0 - 23)
@@ -71,13 +71,19 @@ namespace NCrontab
         //
         // Source: http://www.adminschoice.com/docs/crontab.htm
         //
+        // '#' is allowed for the day-of-week field, and must be followed by a 
+        // number between one and five. It allows you to specify constructs 
+        // such as "the second Friday" of a given month.
+        //
+        // Source: https://en.wikipedia.org/wiki/Cron
+        //
 
         // Six-part expression format:
         //
         // * * * * * *
         // - - - - - -
         // | | | | | |
-        // | | | | | +--- day of week (0 - 6) (Sunday=0)
+        // | | | | | +--- day of week (0 - 6) (Sunday=0) (# occurence format)
         // | | | | +----- month (1 - 12)
         // | | | +------- day of month (1 - 31)
         // | | +--------- hour (0 - 23)
@@ -370,7 +376,7 @@ namespace NCrontab
             // Day of week
             //
 
-            if (_daysOfWeek.Contains((int) nextTime.DayOfWeek)) 
+            if (_daysOfWeek.Match(nextTime)) 
                 return nextTime;
 
             return GetNextOccurrence(new DateTime(year, month, day, 23, 59, 59, 0, baseTime.Kind), endTime);

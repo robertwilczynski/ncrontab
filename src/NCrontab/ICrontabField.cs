@@ -23,6 +23,6 @@ namespace NCrontab
     {
         int GetFirst();
         int Next(int start);
-        bool Contains(int value);
+        bool Match(System.DateTime dateTime);
     }
 }

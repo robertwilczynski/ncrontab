@@ -32,12 +32,16 @@ namespace NCrontab
     /// Represents a single crontab field.
     /// </summary>
 
-    [ Serializable ]
+    [Serializable]
     public sealed class CrontabField : ICrontabField
     {
         readonly BitArray _bits;
-        /* readonly */ int _minValueSet;
-        /* readonly */ int _maxValueSet;
+        /* readonly */
+        int _minValueSet;
+        /* readonly */
+        int _maxValueSet;
+        /* readonly */
+        int _occurrence;
         readonly CrontabFieldImpl _impl;
 
         /// <summary>
@@ -48,7 +52,7 @@ namespace NCrontab
         {
             return TryParse(kind, expression, v => v, e => { throw e(); });
         }
-        
+
         public static CrontabField TryParse(CrontabFieldKind kind, string expression)
         {
             return TryParse(kind, expression, v => v, _ => null);
@@ -91,7 +95,7 @@ namespace NCrontab
         /// <summary>
         /// Parses a crontab field expression representing days in any given month.
         /// </summary>
-        
+
         public static CrontabField Days(string expression)
         {
             return Parse(CrontabFieldKind.Day, expression);
@@ -126,6 +130,7 @@ namespace NCrontab
             _bits.SetAll(false);
             _minValueSet = int.MaxValue;
             _maxValueSet = -1;
+            _occurrence = 0;
         }
 
         /// <summary>
@@ -152,7 +157,7 @@ namespace NCrontab
 
             for (var i = startIndex; i <= lastIndex; i++)
             {
-                if (_bits[i]) 
+                if (_bits[i])
                     return IndexToValue(i);
             }
 
@@ -173,9 +178,32 @@ namespace NCrontab
         /// Determines if the given value occurs in the field.
         /// </summary>
 
-        public bool Contains(int value)
+        bool Contains(int value)
         {
             return _bits[ValueToIndex(value)];
+        }
+
+        /// <summary>
+        /// Determines if the given date matche with the field.
+        /// </summary>
+
+        public bool Match(DateTime dateTime)
+        {
+            var contains = Contains((int)dateTime.DayOfWeek);
+            if (contains && _occurrence > 0)
+            {
+                return _occurrence == Occurrence(dateTime);
+            }
+            return contains;
+        }
+
+        /// <summary>
+        /// Get day of week occurence in the month
+        /// </summary>
+        
+        static int Occurrence(DateTime dateTime)
+        {
+            return (dateTime.Day / 7) + 1;
         }
 
         /// <summary>
@@ -188,20 +216,24 @@ namespace NCrontab
         /// <param name="interval" /> to 1.
         /// </remarks>
 
-        T Accumulate<T>(int start, int end, int interval, T success, Converter<ExceptionProvider, T> errorSelector)
+        T Accumulate<T>(int start, int end, int interval, int occurrence, T success, Converter<ExceptionProvider, T> errorSelector)
         {
+            if (occurrence > 0 && !_impl.OccurrenceAllowed)
+                return OnOccurrenceNotAllowed(errorSelector);
+
             var minValue = _impl.MinValue;
             var maxValue = _impl.MaxValue;
+            _occurrence = occurrence;
 
-            if (start == end) 
+            if (start == end)
             {
-                if (start < 0) 
+                if (start < 0)
                 {
                     //
                     // We're setting the entire range of values.
                     //
 
-                    if (interval <= 1) 
+                    if (interval <= 1)
                     {
                         _minValueSet = minValue;
                         _maxValueSet = maxValue;
@@ -211,8 +243,8 @@ namespace NCrontab
 
                     start = minValue;
                     end = maxValue;
-                } 
-                else 
+                }
+                else
                 {
                     //
                     // We're only setting a single value - check that it is in range.
@@ -224,33 +256,33 @@ namespace NCrontab
                     if (start > maxValue)
                         return OnValueAboveMaxError(start, errorSelector);
                 }
-            } 
-            else 
+            }
+            else
             {
                 //
                 // For ranges, if the start is bigger than the end value then
                 // swap them over.
                 //
 
-                if (start > end) 
+                if (start > end)
                 {
                     end ^= start;
                     start ^= end;
                     end ^= start;
                 }
 
-                if (start < 0) 
+                if (start < 0)
                     start = minValue;
-                else if (start < minValue) 
-                    return OnValueBelowMinError(start, errorSelector);                    
+                else if (start < minValue)
+                    return OnValueBelowMinError(start, errorSelector);
 
-                if (end < 0) 
+                if (end < 0)
                     end = maxValue;
-                else if (end > maxValue) 
+                else if (end > maxValue)
                     return OnValueAboveMaxError(end, errorSelector);
             }
 
-            if (interval < 1) 
+            if (interval < 1)
                 interval = 1;
 
             int i;
@@ -260,7 +292,7 @@ namespace NCrontab
             // the valid field values.
             //
 
-            for (i = start - minValue; i <= (end - minValue); i += interval) 
+            for (i = start - minValue; i <= (end - minValue); i += interval)
                 _bits[i] = true;
 
             //
@@ -269,12 +301,12 @@ namespace NCrontab
             // so far.
             //
 
-            if (_minValueSet > start) 
+            if (_minValueSet > start)
                 _minValueSet = start;
 
             i += (minValue - interval);
 
-            if (_maxValueSet < i) 
+            if (_maxValueSet < i)
                 _maxValueSet = i;
 
             return success;
@@ -284,7 +316,7 @@ namespace NCrontab
         {
             return errorSelector(
                 () => new CrontabException(string.Format(
-                    "{0} is higher than the maximum allowable value for the [{3}] field. Value must be between {1} and {2} (all inclusive).", 
+                    "{0} is higher than the maximum allowable value for the [{3}] field. Value must be between {1} and {2} (all inclusive).",
                     value, _impl.MinValue, _impl.MaxValue, _impl.Kind)));
         }
 
@@ -294,6 +326,14 @@ namespace NCrontab
                 () => new CrontabException(string.Format(
                     "{0} is lower than the minimum allowable value for the [{3}] field. Value must be between {1} and {2} (all inclusive).",
                     value, _impl.MinValue, _impl.MaxValue, _impl.Kind)));
+        }
+
+        T OnOccurrenceNotAllowed<T>(Converter<ExceptionProvider, T> errorSelector)
+        {
+            return errorSelector(
+                () => new CrontabException(string.Format(
+                    "For the [{0}] field occurrence (#) is not allowed.",
+                    _impl.Kind)));
         }
 
         public override string ToString()
