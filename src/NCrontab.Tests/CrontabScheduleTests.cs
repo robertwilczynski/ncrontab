@@ -263,7 +263,7 @@ namespace NCrontab.Tests
             CronCall("28/02/2003 12:01:00", "1 12 28 2 *", "28/02/2004 12:01:00", false);
             CronCall("29/02/2004 12:01:00", "1 12 28 2 *", "28/02/2005 12:01:00", false);
 
-            // Day of week occurence tests
+            // Day of week occurrence tests
 
             CronCall("01/07/2015 00:00:00", "0 0 * * 1#2", "13/07/2015 00:00:00", false);
             CronCall("01/07/2015 00:00:00", "0 0 * * 3#1", "05/08/2015 00:00:00", false);
@@ -422,97 +422,97 @@ namespace NCrontab.Tests
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceNotAllowedForSeconds()
+        public void OccurrenceNotAllowedForSeconds()
         {
             CrontabSchedule.Parse("1#2 * * * * *");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceNotAllowedForMinutesField()
+        public void OccurrenceNotAllowedForMinutesField()
         {
             CrontabSchedule.Parse("1#2 * * * *");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceNotAllowedForMinutesFieldWithSecondsField()
+        public void OccurrenceNotAllowedForMinutesFieldWithSecondsField()
         {
             CrontabSchedule.Parse("* 1#2 * * * *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceNotAllowedForHoursField()
+        public void OccurrenceNotAllowedForHoursField()
         {
             CrontabSchedule.Parse("* 1#2 * * *");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceNotAllowedForHoursFieldWithSecondsField()
+        public void OccurrenceNotAllowedForHoursFieldWithSecondsField()
         {
             CrontabSchedule.Parse("* * 1#2 * * *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceNotAllowedForDayField()
+        public void OccurrenceNotAllowedForDayField()
         {
             CrontabSchedule.Parse("* * 1#2 * *");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceNotAllowedForDayFieldWithSecondsField()
+        public void OccurrenceNotAllowedForDayFieldWithSecondsField()
         {
             CrontabSchedule.Parse("* * * 1#2 * *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceNotAllowedForMonthField()
+        public void OccurrenceNotAllowedForMonthField()
         {
             CrontabSchedule.Parse("* * * 1#2 *");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceNotAllowedForMonthFieldWithSecondsField()
+        public void OccurrenceNotAllowedForMonthFieldWithSecondsField()
         {
             CrontabSchedule.Parse("* * * * 1#2 *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceAllowedForDayOfWeekFieldWithWrongFormat_MissingDayOfWeek()
+        public void OccurrenceAllowedForDayOfWeekFieldWithWrongFormat_MissingDayOfWeek()
         {
             CrontabSchedule.Parse("* * * * #2");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceAllowedForDayOfWeekFieldWithWrongFormat_MissingDayOfWeekWithSecondsField()
+        public void OccurrenceAllowedForDayOfWeekFieldWithWrongFormat_MissingDayOfWeekWithSecondsField()
         {
             CrontabSchedule.Parse("* * * * * #2", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceAllowedForDayOfWeekFieldWithWrongFormat_MissingOccurence()
+        public void OccurrenceAllowedForDayOfWeekFieldWithWrongFormat_MissingOccurrence()
         {
             CrontabSchedule.Parse("* * * * 1#");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceAllowedForDayOfWeekFieldWithWrongFormat_MissingOccurenceWithSecondsField()
+        public void OccurrenceAllowedForDayOfWeekFieldWithWrongFormat_MissingOccurrenceWithSecondsField()
         {
             CrontabSchedule.Parse("* * * * * 1#", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceAllowedForDayOfWeekFieldWithWrongFormat_OccurenceIsNonNumericValue()
+        public void OccurrenceAllowedForDayOfWeekFieldWithWrongFormat_OccurrenceIsNonNumericValue()
         {
             CrontabSchedule.Parse("* * * * 1#*");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
-        public void OccurenceAllowedForDayOfWeekFieldWithWrongFormat_OccurenceIsNonNumericValueWithSecondsField()
+        public void OccurrenceAllowedForDayOfWeekFieldWithWrongFormat_OccurrenceIsNonNumericValueWithSecondsField()
         {
             CrontabSchedule.Parse("* * * * * 1#*");
         }
 
         [Test]
-        public void OccurenceAllowedForDayOfWeekField()
+        public void OccurrenceAllowedForDayOfWeekField()
         {
             CrontabSchedule.Parse("  * * * * 1#2");
             CrontabSchedule.Parse("* * * * * 1#2", new ParseOptions { IncludingSeconds = true });

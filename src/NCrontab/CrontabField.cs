@@ -198,7 +198,7 @@ namespace NCrontab
         }
 
         /// <summary>
-        /// Get day of week occurence in the month
+        /// Get day of week occurrence in the month
         /// </summary>
         
         static int Occurrence(DateTime dateTime)
