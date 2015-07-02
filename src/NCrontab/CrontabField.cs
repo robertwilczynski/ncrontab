@@ -203,7 +203,7 @@ namespace NCrontab
         
         static int Occurrence(DateTime dateTime)
         {
-            return (dateTime.Day / 7) + 1;
+            return (int)Math.Ceiling(dateTime.Day / 7.0);
         }
 
         /// <summary>

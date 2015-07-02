@@ -510,6 +510,16 @@ namespace NCrontab.Tests
             HasOccurrence("0 0 * * *#1", "02/07/2015 00:00:00");
             HasOccurrence("0 0 * * 6#4", "25/07/2015 00:00:00");
             HasOccurrence("0 0 * * 3#5", "29/07/2015 00:00:00");
+
+            HasOccurrence("0 0 * * 1,2,3", "06/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 1,2,3", "07/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 1,2,3", "08/07/2015 00:00:00");
+            HasNotOccurrence("0 0 * * 1,2,3", "05/07/2015 00:00:00");
+            HasNotOccurrence("0 0 * * 1,2,3", "09/07/2015 00:00:00");
+
+            HasOccurrence("0 0 * * 1#1", "06/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 2#1", "07/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 3#1", "01/07/2015 00:00:00");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
