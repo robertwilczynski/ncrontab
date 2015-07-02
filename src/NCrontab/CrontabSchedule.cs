@@ -381,6 +381,60 @@ namespace NCrontab
 
             return GetNextOccurrence(new DateTime(year, month, day, 23, 59, 59, 0, baseTime.Kind), endTime);
         }
+        
+        /// <summary>
+        /// Check if provided date matches with expression
+        /// </summary>
+
+        public bool HasOccurrence(DateTime dateTime)
+        {
+            var month = dateTime.Month;
+            var day = dateTime.Day;
+            var hour = dateTime.Hour;
+            var minute = dateTime.Minute;
+            var second = dateTime.Second;
+
+            //
+            // Second
+            //
+
+            if (_seconds != null && !_seconds.Contains(second))
+                return false;
+
+            //
+            // Minute
+            //
+
+            if (!_minutes.Contains(minute))
+                return false;
+
+            //
+            // Hour
+            //
+
+            if (!_hours.Contains(hour))
+                return false;
+
+            //
+            // Day
+            //
+
+            if (!_days.Contains(day))
+                return false;
+
+            //
+            // Month
+            //
+
+            if (!_months.Contains(month))
+                return false;
+
+            //
+            // Day of week
+            //
+
+            return _daysOfWeek.Match(dateTime);
+        }
 
         /// <summary>
         /// Returns a string in crontab expression (expanded) that represents 

@@ -178,7 +178,7 @@ namespace NCrontab
         /// Determines if the given value occurs in the field.
         /// </summary>
 
-        bool Contains(int value)
+        public bool Contains(int value)
         {
             return _bits[ValueToIndex(value)];
         }

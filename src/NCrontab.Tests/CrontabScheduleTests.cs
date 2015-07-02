@@ -307,6 +307,211 @@ namespace NCrontab.Tests
                 CronFinite(new ParseOptions { IncludingSeconds = true })("* * * 31 Feb *", "01/01/2001 00:00:00", "01/01/2010 00:00:00"));
         }
 
+        [Test]
+        public void HasOccurrenceEvaluations()
+        {
+            HasOccurrence("* * * * *", "01/01/2003 00:01:00");
+            HasOccurrence("* * * * *", "01/01/2003 00:02:00");
+            HasOccurrence("* * * * *", "01/01/2003 00:03:00");
+            HasOccurrence("* * * * *", "01/01/2003 01:00:00");
+            HasOccurrence("* * * * *", "01/01/2003 02:00:00");
+            HasOccurrence("* * * * *", "02/01/2003 00:00:00");
+            HasOccurrence("* * * * *", "01/01/2004 00:00:00");
+            HasOccurrence("* * * * *", "01/03/2003 00:00:00");
+            HasOccurrence("* * * * *", "29/02/2004 00:00:00");
+            HasOccurrence("* * * * *", "29/02/2004 00:00:10");
+            HasOccurrence("* * * * *", "29/02/2004 00:00:01");
+            HasOccurrence("* * * * *", "29/02/2004 00:00:59");
+
+            // Second tests
+
+            HasOccurrence("45 * * * * *", "01/01/2003 00:00:45", true);
+
+            HasOccurrence("45-47,48,49 * * * * *", "01/01/2003 00:00:45", true);
+            HasOccurrence("45-47,48,49 * * * * *", "01/01/2003 00:00:46", true);
+            HasOccurrence("45-47,48,49 * * * * *", "01/01/2003 00:00:47", true);
+            HasOccurrence("45-47,48,49 * * * * *", "01/01/2003 00:00:48", true);
+            HasOccurrence("45-47,48,49 * * * * *", "01/01/2003 00:00:49", true);
+            HasOccurrence("45-47,48,49 * * * * *", "01/01/2003 00:01:45", true);
+            HasNotOccurrence("45-47,48,49 * * * * *", "01/01/2003 00:01:44", true);
+            HasNotOccurrence("45-47,48,49 * * * * *", "01/01/2003 00:01:50", true);
+            HasNotOccurrence("45-47,48,49 * * * * *", "01/01/2003 00:01:00", true);
+
+            HasOccurrence("2/5 * * * * *", "01/01/2003 00:00:02", true);
+            HasOccurrence("2/5 * * * * *", "01/01/2003 00:00:07", true);
+            HasOccurrence("2/5 * * * * *", "01/01/2003 00:00:52", true);
+            HasOccurrence("2/5 * * * * *", "01/01/2003 00:00:57", true);
+            HasOccurrence("2/5 * * * * *", "01/01/2003 00:01:02", true);
+            HasNotOccurrence("2/5 * * * * *", "01/01/2003 00:01:03", true);
+            HasNotOccurrence("2/5 * * * * *", "01/01/2003 00:01:04", true);
+            HasNotOccurrence("2/5 * * * * *", "01/01/2003 00:01:05", true);
+            HasNotOccurrence("2/5 * * * * *", "01/01/2003 00:01:06", true);
+
+            // Minute tests
+
+            HasOccurrence("45 * * * *", "01/01/2003 00:45:00");
+
+            HasOccurrence("45-47,48,49 * * * *", "01/01/2003 00:45:00");
+            HasOccurrence("45-47,48,49 * * * *", "01/01/2003 00:46:00");
+            HasOccurrence("45-47,48,49 * * * *", "01/01/2003 00:47:00");
+            HasOccurrence("45-47,48,49 * * * *", "01/01/2003 00:48:00");
+            HasOccurrence("45-47,48,49 * * * *", "01/01/2003 00:49:00");
+            HasOccurrence("45-47,48,49 * * * *", "01/01/2003 01:45:00");
+            HasNotOccurrence("45-47,48,49 * * * *", "01/01/2003 01:44:00");
+            HasNotOccurrence("45-47,48,49 * * * *", "01/01/2003 01:50:00");
+            HasNotOccurrence("45-47,48,49 * * * *", "01/01/2003 01:59:00");
+            HasNotOccurrence("45-47,48,49 * * * *", "01/01/2003 01:00:00");
+
+            HasOccurrence("2/5 * * * *", "01/01/2003 00:02:00");
+            HasOccurrence("2/5 * * * *", "01/01/2003 00:07:00");
+            HasOccurrence("2/5 * * * *", "01/01/2003 00:52:00");
+            HasOccurrence("2/5 * * * *", "01/01/2003 00:57:00");
+            HasOccurrence("2/5 * * * *", "01/01/2003 01:02:00");
+            HasNotOccurrence("2/5 * * * *", "01/01/2003 01:03:00");
+            HasNotOccurrence("2/5 * * * *", "01/01/2003 01:04:00");
+            HasNotOccurrence("2/5 * * * *", "01/01/2003 01:05:00");
+            HasNotOccurrence("2/5 * * * *", "01/01/2003 01:06:00");
+
+            HasOccurrence("3 45 * * * *", "01/01/2003 00:45:03", true);
+
+            HasOccurrence("6 45-47,48,49 * * * *", "01/01/2003 00:45:06", true);
+            HasOccurrence("6 45-47,48,49 * * * *", "01/01/2003 00:46:06", true);
+            HasOccurrence("6 45-47,48,49 * * * *", "01/01/2003 00:47:06", true);
+            HasOccurrence("6 45-47,48,49 * * * *", "01/01/2003 00:48:06", true);
+            HasOccurrence("6 45-47,48,49 * * * *", "01/01/2003 00:49:06", true);
+            HasOccurrence("6 45-47,48,49 * * * *", "01/01/2003 01:45:06", true);
+            HasNotOccurrence("6 45-47,48,49 * * * *", "01/01/2003 01:45:07", true);
+            HasNotOccurrence("6 45-47,48,49 * * * *", "01/01/2003 01:44:06", true);
+
+            HasOccurrence("9 2/5 * * * *", "01/01/2003 00:02:09", true);
+            HasOccurrence("9 2/5 * * * *", "01/01/2003 00:07:09", true);
+            HasOccurrence("9 2/5 * * * *", "01/01/2003 00:52:09", true);
+            HasOccurrence("9 2/5 * * * *", "01/01/2003 00:57:09", true);
+            HasOccurrence("9 2/5 * * * *", "01/01/2003 01:02:09", true);
+
+            // Hour tests
+
+            HasOccurrence(" * 3/4 * * *", "20/12/2003 11:00:00");
+            HasNotOccurrence(" * 3/4 * * *", "20/12/2003 10:00:00");
+            HasOccurrence(" * 3   * * *", "20/12/2003 03:00:00");
+            HasOccurrence("30 3   * * *", "20/12/2003 03:30:00");
+            HasNotOccurrence("30 3   * * *", "20/12/2003 03:29:00");
+
+            // Day of month tests
+
+            HasOccurrence("30  *  1 * *", "01/02/2003 00:30:00");
+            HasOccurrence("30  *  1 * *", "01/02/2003 01:30:00");
+            HasNotOccurrence("30  *  1 * *", "02/02/2003 01:30:00");
+
+            HasOccurrence("10  * 22    * *", "22/01/2003 00:10:00");
+            HasOccurrence("30 23 19    * *", "19/01/2003 23:30:00");
+            HasOccurrence("30 23 21    * *", "21/01/2003 23:30:00");
+            HasOccurrence(" *  * 21    * *", "21/01/2003 00:00:00");
+            HasOccurrence(" *  * 30,31 * *", "30/07/2003 00:00:00");
+            HasOccurrence(" *  * 30,31 * *", "31/07/2003 00:00:00");
+            HasNotOccurrence(" *  * 30,31 * *", "29/07/2003 00:00:00");
+
+            // Test month 30,31 days
+
+            HasOccurrence("0 0 15,30,31 * *", "15/01/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "30/01/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "31/01/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/02/2000 00:00:00");
+            
+            HasOccurrence("0 0 15,30,31 * *", "15/03/2000 00:00:00");
+            
+            HasOccurrence("0 0 15,30,31 * *", "30/03/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "31/03/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/04/2000 00:00:00");
+
+            HasOccurrence("0 0 15,30,31 * *", "30/04/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/05/2000 00:00:00");
+
+            HasOccurrence("0 0 15,30,31 * *", "30/05/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "31/05/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/06/2000 00:00:00");
+
+            HasOccurrence("0 0 15,30,31 * *", "30/06/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/07/2000 00:00:00");
+
+            HasOccurrence("0 0 15,30,31 * *", "30/07/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "31/07/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/08/2000 00:00:00");
+
+            HasOccurrence("0 0 15,30,31 * *", "30/08/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "31/08/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/09/2000 00:00:00");
+
+            HasOccurrence("0 0 15,30,31 * *", "30/09/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/10/2000 00:00:00");
+
+            HasOccurrence("0 0 15,30,31 * *", "30/10/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "31/10/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/11/2000 00:00:00");
+
+            HasOccurrence("0 0 15,30,31 * *", "30/11/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/12/2000 00:00:00");
+
+            HasOccurrence("0 0 15,30,31 * *", "30/12/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "31/12/2000 00:00:00");
+            HasOccurrence("0 0 15,30,31 * *", "15/01/2001 00:00:00");
+
+            // Other month tests (including year rollover)
+
+            HasOccurrence("10 * * 6 *", "01/06/2004 00:10:00");
+            HasOccurrence(" 1 2 3 * *", "03/02/2003 02:01:00");
+            HasOccurrence("10 * * February,April-Jun *", "01/02/2003 00:10:00");
+            HasOccurrence("0 12 1 6 *", "01/06/2003 12:00:00");
+            HasOccurrence("* 12 1 6 *", "01/06/1989 12:00:00");
+            HasOccurrence("* 12 1 6 *", "01/06/1988 12:00:00");
+            HasOccurrence("* 2,4-8,15 * 6 *", "01/06/1988 02:00:00");
+            HasOccurrence("20 * * january,FeB,Mar,april,May,JuNE,July,Augu,SEPT-October,Nov,DECEM *", "11/03/1988 15:20:00");
+
+            // Day of week tests
+
+            HasOccurrence("30 6 * * 0", "29/06/2003 06:30:00");
+            HasOccurrence("30 6 * * sunday", "29/06/2003 06:30:00");
+            HasOccurrence("30 6 * * SUNDAY", "29/06/2003 06:30:00");
+            HasOccurrence("1 12 * * 2", "24/06/2003 12:01:00");
+            HasOccurrence("1 12 * * 2", "01/07/2003 12:01:00");
+
+            HasOccurrence("15 18 * * Mon", "02/06/2003 18:15:00");
+            HasOccurrence("15 18 * * Mon", "09/06/2003 18:15:00");
+            HasOccurrence("15 18 * * Mon", "16/06/2003 18:15:00");
+            HasOccurrence("15 18 * * Mon", "23/06/2003 18:15:00");
+            HasOccurrence("15 18 * * Mon", "30/06/2003 18:15:00");
+            HasOccurrence("15 18 * * Mon", "07/07/2003 18:15:00");
+
+            HasOccurrence("* * * * Mon", "06/01/2003 00:00:00");
+            HasOccurrence("45 16 1 * Mon", "01/09/2003 16:45:00");
+            HasOccurrence("45 16 1 * Mon", "01/12/2003 16:45:00");
+
+            // Leap year tests
+
+            HasOccurrence("1 12 29 2 *", "29/02/2000 12:01:00");
+            HasOccurrence("1 12 29 2 *", "29/02/2004 12:01:00");
+            HasOccurrence("1 12 29 2 *", "29/02/2008 12:01:00");
+
+            // Non-leap year tests
+
+            HasOccurrence("1 12 28 2 *", "28/02/2000 12:01:00");
+            HasOccurrence("1 12 28 2 *", "28/02/2001 12:01:00");
+            HasOccurrence("1 12 28 2 *", "28/02/2002 12:01:00");
+            HasOccurrence("1 12 28 2 *", "28/02/2003 12:01:00");
+            HasOccurrence("1 12 28 2 *", "28/02/2004 12:01:00");
+            HasOccurrence("1 12 28 2 *", "28/02/2005 12:01:00");
+
+            // Day of week occurrence tests
+
+            HasOccurrence("0 0 * * 1#2", "13/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 3#1", "05/08/2015 00:00:00");
+            HasOccurrence("0 0 * * 3#1", "01/07/2015 00:00:00");
+            HasOccurrence("0 0 * * *#1", "01/07/2015 00:00:00");
+            HasOccurrence("0 0 * * *#1", "02/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 6#4", "25/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 3#5", "29/07/2015 00:00:00");
+        }
+
         [Test, ExpectedException(typeof(CrontabException))]
         public void BadSecondsField()
         {
@@ -518,6 +723,18 @@ namespace NCrontab.Tests
             CrontabSchedule.Parse("* * * * * 1#2", new ParseOptions { IncludingSeconds = true });
             CrontabSchedule.Parse("  * * * * *#2");
             CrontabSchedule.Parse("* * * * * *#2", new ParseOptions { IncludingSeconds = true });
+        }
+
+        static void HasOccurrence(string cronExpression, string timeString, bool includingSeconds = false)
+        {
+            var schedule = CrontabSchedule.Parse(cronExpression, new ParseOptions { IncludingSeconds = includingSeconds });
+            Assert.IsTrue(schedule.HasOccurrence(Time(timeString)));
+        }
+
+        static void HasNotOccurrence(string cronExpression, string timeString, bool includingSeconds = false)
+        {
+            var schedule = CrontabSchedule.Parse(cronExpression, new ParseOptions { IncludingSeconds = includingSeconds });
+            Assert.IsFalse(schedule.HasOccurrence(Time(timeString)));
         }
 
         static void TimeCron(TimeSpan limit, ThreadStart test)
