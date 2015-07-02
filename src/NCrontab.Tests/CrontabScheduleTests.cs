@@ -29,25 +29,25 @@ namespace NCrontab.Tests
     using ParseOptions = CrontabSchedule.ParseOptions;
 
     #endregion
- 
-    [ TestFixture ]
+
+    [TestFixture]
     public sealed class CrontabScheduleTests
     {
         const string TimeFormat = "dd/MM/yyyy HH:mm:ss";
 
-        [ Test, ExpectedException(typeof(ArgumentNullException)) ]
+        [Test, ExpectedException(typeof(ArgumentNullException))]
         public void CannotParseNullString()
         {
             CrontabSchedule.Parse(null);
         }
 
-        [ Test, ExpectedException(typeof(CrontabException)) ]
+        [Test, ExpectedException(typeof(CrontabException))]
         public void CannotParseEmptyString()
         {
             CrontabSchedule.Parse(string.Empty);
         }
 
-        [ Test ]
+        [Test]
         public void AllTimeString()
         {
             Assert.AreEqual("* * * * *", CrontabSchedule.Parse("* * * * *").ToString());
@@ -84,7 +84,7 @@ namespace NCrontab.Tests
         /// time correctly in various circumstances.
         /// </summary>
 
-        [ Test ]
+        [Test]
         public void Evaluations()
         {
             CronCall("01/01/2003 00:00:00", "* * * * *", "01/01/2003 00:01:00", false);
@@ -231,11 +231,11 @@ namespace NCrontab.Tests
 
             // Day of week tests
 
-            CronCall("26/06/2003 10:00:00", "30 6 * * 0",      "29/06/2003 06:30:00", false);
+            CronCall("26/06/2003 10:00:00", "30 6 * * 0", "29/06/2003 06:30:00", false);
             CronCall("26/06/2003 10:00:00", "30 6 * * sunday", "29/06/2003 06:30:00", false);
             CronCall("26/06/2003 10:00:00", "30 6 * * SUNDAY", "29/06/2003 06:30:00", false);
-            CronCall("19/06/2003 00:00:00", "1 12 * * 2",      "24/06/2003 12:01:00", false);
-            CronCall("24/06/2003 12:01:00", "1 12 * * 2",      "01/07/2003 12:01:00", false);
+            CronCall("19/06/2003 00:00:00", "1 12 * * 2", "24/06/2003 12:01:00", false);
+            CronCall("24/06/2003 12:01:00", "1 12 * * 2", "01/07/2003 12:01:00", false);
 
             CronCall("01/06/2003 14:55:00", "15 18 * * Mon", "02/06/2003 18:15:00", false);
             CronCall("02/06/2003 18:15:00", "15 18 * * Mon", "09/06/2003 18:15:00", false);
@@ -244,7 +244,7 @@ namespace NCrontab.Tests
             CronCall("23/06/2003 18:15:00", "15 18 * * Mon", "30/06/2003 18:15:00", false);
             CronCall("30/06/2003 18:15:00", "15 18 * * Mon", "07/07/2003 18:15:00", false);
 
-            CronCall("01/01/2003 00:00:00", "* * * * Mon",   "06/01/2003 00:00:00", false);
+            CronCall("01/01/2003 00:00:00", "* * * * Mon", "06/01/2003 00:00:00", false);
             CronCall("01/01/2003 12:00:00", "45 16 1 * Mon", "01/09/2003 16:45:00", false);
             CronCall("01/09/2003 23:45:00", "45 16 1 * Mon", "01/12/2003 16:45:00", false);
 
@@ -264,7 +264,7 @@ namespace NCrontab.Tests
             CronCall("29/02/2004 12:01:00", "1 12 28 2 *", "28/02/2005 12:01:00", false);
         }
 
-        [ Test ]
+        [Test]
         public void FiniteOccurrences()
         {
             CronFinite(" *  * * * *  ", "01/01/2003 00:00:00", "01/01/2003 00:00:00");
@@ -283,7 +283,7 @@ namespace NCrontab.Tests
             cronFinite("10 30 12 * * Mon", "01/01/2003 00:00:00", "06/01/2003 12:00:10");
         }
 
-        [ Test, Category("Performance") ]
+        [Test, Category("Performance")]
         public void DontLoopIndefinitely()
         {
             //
@@ -300,70 +300,115 @@ namespace NCrontab.Tests
         [Test, ExpectedException(typeof(CrontabException))]
         public void BadSecondsField()
         {
-            CrontabSchedule.Parse("bad * * * * *");
+            CrontabSchedule.Parse("bad * * * * *", new ParseOptions { IncludingSeconds = true });
         }
 
-        [ Test, ExpectedException(typeof(CrontabException)) ]
+        [Test, ExpectedException(typeof(CrontabException))]
         public void BadMinutesField()
         {
             CrontabSchedule.Parse("bad * * * *");
-            CrontabSchedule.Parse("* bad * * * *");
+        }
+
+        [Test, ExpectedException(typeof(CrontabException))]
+        public void BadMinutesFieldWithSecondsField()
+        {
+            CrontabSchedule.Parse("* bad * * * *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
         public void BadHoursField()
         {
             CrontabSchedule.Parse("* bad * * *");
-            CrontabSchedule.Parse("* * bad * * *");
+        }
+
+        [Test, ExpectedException(typeof(CrontabException))]
+        public void BadHoursFieldWithSecondsField()
+        {
+            CrontabSchedule.Parse("* * bad * * *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
         public void BadDayField()
         {
             CrontabSchedule.Parse("* * bad * *");
-            CrontabSchedule.Parse("* * * bad * *");
+        }
+
+        [Test, ExpectedException(typeof(CrontabException))]
+        public void BadDayFieldWithSecondsField()
+        {
+            CrontabSchedule.Parse("* * * bad * *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
         public void BadMonthField()
         {
             CrontabSchedule.Parse("* * * bad *");
-            CrontabSchedule.Parse("* * * * bad *");
+        }
+
+        [Test, ExpectedException(typeof(CrontabException))]
+        public void BadMonthFieldWithSecondsField()
+        {
+            CrontabSchedule.Parse("* * * * bad *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
         public void BadDayOfWeekField()
         {
             CrontabSchedule.Parse("* * * * mon,bad,wed");
-            CrontabSchedule.Parse("* * * * * mon,bad,wed");
+        }
+
+        [Test, ExpectedException(typeof(CrontabException))]
+        public void BadDayOfWeekFieldWithSecondsField()
+        {
+            CrontabSchedule.Parse("* * * * * mon,bad,wed", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
         public void OutOfRangeField()
         {
             CrontabSchedule.Parse("* 1,2,3,456,7,8,9 * * *");
-            CrontabSchedule.Parse("* * 1,2,3,456,7,8,9 * * *");
+        }
+
+        [Test, ExpectedException(typeof(CrontabException))]
+        public void OutOfRangeFieldWithSecondsField()
+        {
+            CrontabSchedule.Parse("* * 1,2,3,456,7,8,9 * * *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
         public void NonNumberValueInNumericOnlyField()
         {
             CrontabSchedule.Parse("* 1,Z,3,4 * * *");
-            CrontabSchedule.Parse("* * 1,Z,3,4 * * *");
+        }
+
+        [Test, ExpectedException(typeof(CrontabException))]
+        public void NonNumberValueInNumericOnlyFieldWithSecondsField()
+        {
+            CrontabSchedule.Parse("* * 1,Z,3,4 * * *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
         public void NonNumericFieldInterval()
         {
             CrontabSchedule.Parse("* 1/Z * * *");
-            CrontabSchedule.Parse("* * 1/Z * * *");
+        }
+
+        [Test, ExpectedException(typeof(CrontabException))]
+        public void NonNumericFieldIntervalWithSecondsField()
+        {
+            CrontabSchedule.Parse("* * 1/Z * * *", new ParseOptions { IncludingSeconds = true });
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
         public void NonNumericFieldRangeComponent()
         {
             CrontabSchedule.Parse("* 3-l2 * * *");
-            CrontabSchedule.Parse("* * 3-l2 * * *");
+        }
+
+        [Test, ExpectedException(typeof(CrontabException))]
+        public void NonNumericFieldRangeComponentWithSecondsField()
+        {
+            CrontabSchedule.Parse("* * 3-l2 * * *", new ParseOptions { IncludingSeconds = true });
         }
 
         static void TimeCron(TimeSpan limit, ThreadStart test)
@@ -376,7 +421,7 @@ namespace NCrontab.Tests
 
             worker.Start();
 
-            if (worker.Join(!Debugger.IsAttached ? (int) limit.TotalMilliseconds : Timeout.Infinite))
+            if (worker.Join(!Debugger.IsAttached ? (int)limit.TotalMilliseconds : Timeout.Infinite))
             {
                 if (e != null)
                     throw new Exception(e.Message, e);
@@ -403,23 +448,23 @@ namespace NCrontab.Tests
             {
                 var start = Time(startTimeString);
 
-                try 
+                try
                 {
                     var schedule = CrontabSchedule.Parse(cronExpression, options);
 
-                    if (expectException) 
+                    if (expectException)
                         Assert.Fail("The expression <{0}> cannot be valid.", cronExpression);
 
                     var next = schedule.GetNextOccurrence(start);
 
                     Assert.AreEqual(nextTimeString, TimeString(next),
                         "Occurrence of <{0}> after <{1}>.", cronExpression, startTimeString);
-                } 
-                catch (CrontabException e) 
+                }
+                catch (CrontabException e)
                 {
-                    if (!expectException) 
+                    if (!expectException)
                         Assert.Fail("Unexpected ParseException while parsing <{0}>: {1}", cronExpression, e.ToString());
-                }                      
+                }
             };
         }
 
