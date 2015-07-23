@@ -33,7 +33,7 @@ namespace NCrontab
     /// Represents a schedule initialized from the crontab expression.
     /// </summary>
 
-    [ Serializable ]
+    [Serializable]
     public sealed class CrontabSchedule
     {
         readonly CrontabField _seconds;
@@ -147,9 +147,9 @@ namespace NCrontab
             var offset = includingSeconds ? 0 : 1;
             for (var i = 0; i < tokens.Length; i++)
             {
-                var kind = (CrontabFieldKind) i + offset;
-                var field = CrontabField.TryParse(kind, tokens[i], v => new { ErrorProvider = (ExceptionProvider) null, Value = v },
-                                                                   e => new { ErrorProvider = e, Value = (CrontabField) null });
+                var kind = (CrontabFieldKind)i + offset;
+                var field = CrontabField.TryParse(kind, tokens[i], v => new { ErrorProvider = (ExceptionProvider)null, Value = v },
+                                                                   e => new { ErrorProvider = e, Value = (CrontabField)null });
                 if (field.ErrorProvider != null)
                     return errorSelector(field.ErrorProvider);
                 fields[i + offset] = field.Value;
@@ -160,8 +160,8 @@ namespace NCrontab
 
         CrontabSchedule(
             CrontabField seconds,
-            CrontabField minutes, CrontabField hours, 
-            CrontabField days, CrontabField months, 
+            CrontabField minutes, CrontabField hours,
+            CrontabField days, CrontabField months,
             CrontabField daysOfWeek)
         {
             Debug.Assert(minutes != null);
@@ -198,7 +198,7 @@ namespace NCrontab
         public IEnumerable<DateTime> GetNextOccurrences(DateTime baseTime, DateTime endTime)
         {
             for (var occurrence = GetNextOccurrence(baseTime, endTime);
-                 occurrence < endTime; 
+                 occurrence < endTime;
                  occurrence = GetNextOccurrence(occurrence, endTime))
             {
                 yield return occurrence;
@@ -270,7 +270,7 @@ namespace NCrontab
 
             minute = _minutes.Next(minute);
 
-            if (minute == nil) 
+            if (minute == nil)
             {
                 minute = _minutes.GetFirst();
                 hour++;
@@ -281,8 +281,8 @@ namespace NCrontab
             //
 
             hour = _hours.Next(hour);
-            
-            if (hour == nil) 
+
+            if (hour == nil)
             {
                 minute = _minutes.GetFirst();
                 hour = _hours.GetFirst();
@@ -299,8 +299,8 @@ namespace NCrontab
 
             day = _days.Next(day);
 
-            RetryDayMonth:
-        
+        RetryDayMonth:
+
             if (day == nil)
             {
                 second = seconds.GetFirst();
@@ -376,16 +376,15 @@ namespace NCrontab
             // Day of week
             //
 
-            if (_daysOfWeek.Match(nextTime)) 
+            if (_daysOfWeek.Match(nextTime))
                 return nextTime;
 
             return GetNextOccurrence(new DateTime(year, month, day, 23, 59, 59, 0, baseTime.Kind), endTime);
         }
-        
+
         /// <summary>
         /// Check if provided date matches with expression
         /// </summary>
-
         public bool HasOccurrence(DateTime dateTime)
         {
             var month = dateTime.Month;
@@ -434,6 +433,67 @@ namespace NCrontab
             //
 
             return _daysOfWeek.Match(dateTime);
+        }
+
+        /// <summary>
+        /// Check if provided date matches with expression
+        /// </summary>
+        public bool HasOccurrence(DateTime startDate, DateTime dateTime)
+        {
+            if ((_seconds == null || _seconds.Every.HasValue == false) &&
+                _minutes.Every.HasValue == false &&
+                _hours.Every.HasValue == false &&
+                _days.Every.HasValue == false &&
+                _months.Every.HasValue == false &&
+                _daysOfWeek.Every.HasValue == false)
+                return HasOccurrence(dateTime);
+
+            var month = dateTime.Month;
+            var day = dateTime.Day;
+            var hour = dateTime.Hour;
+            var minute = dateTime.Minute;
+            var second = dateTime.Second;
+
+            //
+            // Second
+            //
+
+            if (_seconds != null && !_seconds.Match(startDate, dateTime))
+                return false;
+
+            //
+            // Minute
+            //
+
+            if (!_minutes.Match(startDate, dateTime))
+                return false;
+
+            //
+            // Hour
+            //
+
+            if (!_hours.Match(startDate, dateTime))
+                return false;
+
+            //
+            // Day
+            //
+
+            if (!_days.Match(startDate, dateTime))
+                return false;
+
+            //
+            // Month
+            //
+
+            if (!_months.Match(startDate, dateTime))
+                return false;
+
+            //
+            // Day of week
+            //
+
+            return _daysOfWeek.Match(startDate, dateTime);
         }
 
         /// <summary>

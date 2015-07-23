@@ -417,9 +417,9 @@ namespace NCrontab.Tests
             HasOccurrence("0 0 15,30,31 * *", "30/01/2000 00:00:00");
             HasOccurrence("0 0 15,30,31 * *", "31/01/2000 00:00:00");
             HasOccurrence("0 0 15,30,31 * *", "15/02/2000 00:00:00");
-            
+
             HasOccurrence("0 0 15,30,31 * *", "15/03/2000 00:00:00");
-            
+
             HasOccurrence("0 0 15,30,31 * *", "30/03/2000 00:00:00");
             HasOccurrence("0 0 15,30,31 * *", "31/03/2000 00:00:00");
             HasOccurrence("0 0 15,30,31 * *", "15/04/2000 00:00:00");
@@ -520,6 +520,40 @@ namespace NCrontab.Tests
             HasOccurrence("0 0 * * 1#1", "06/07/2015 00:00:00");
             HasOccurrence("0 0 * * 2#1", "07/07/2015 00:00:00");
             HasOccurrence("0 0 * * 3#1", "01/07/2015 00:00:00");
+
+            HasOccurrence("0 0 * * 1,2,3#1", "06/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 1,2,3#1", "07/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 1,2,3#1", "01/07/2015 00:00:00");
+            HasNotOccurrence("0 0 * * 1,2,3#1", "13/07/2015 00:00:00");
+            HasNotOccurrence("0 0 * * 1#1,2#1,3#1", "13/07/2015 00:00:00");
+            HasOccurrence("0 0 * * 1#1,2#1,3#1", "01/07/2015 00:00:00");
+        }
+
+        [Test]
+        public void HasOccurrenceEvaluationsWithStartDate()
+        {
+            HasOccurrence("0 0 * */11 *", "01/01/2015 00:00:00", "01/01/2015 00:00:00");
+            HasOccurrence("0 0 * */11 *", "01/01/2015 00:00:00", "01/12/2015 00:00:00");
+            HasNotOccurrence("0 0 * */11 *", "01/01/2015 00:00:00", "01/01/2016 00:00:00");
+            HasNotOccurrence("0 0 * */11 *", "01/01/2015 00:00:00", "01/12/2016 00:00:00");
+            HasOccurrence("0 0 * */11 *", "01/01/2015 00:00:00", "01/11/2016 00:00:00");
+
+            HasOccurrence("0 0 * */11 *", "01/05/2015 00:00:00", "01/05/2015 00:00:00");
+            HasOccurrence("0 0 * */11 *", "01/05/2015 00:00:00", "01/04/2016 00:00:00");
+            HasOccurrence("0 0 * */11 *", "01/05/2015 00:00:00", "01/03/2017 00:00:00");
+
+            HasOccurrence("0 0 * */5 *", "01/01/2015 00:00:00", "01/01/2015 00:00:00");
+            HasOccurrence("0 0 * */5 *", "01/01/2015 00:00:00", "01/06/2015 00:00:00");
+            HasOccurrence("0 0 * */5 *", "01/01/2015 00:00:00", "01/11/2015 00:00:00");
+            HasOccurrence("0 0 * */5 *", "01/01/2015 00:00:00", "01/04/2016 00:00:00");
+            HasOccurrence("0 0 * */5 *", "01/01/2015 00:00:00", "01/09/2016 00:00:00");
+
+            HasOccurrence("0 0 */29 * *", "01/01/2015 00:00:00", "30/01/2015 00:00:00");
+            HasOccurrence("0 0 */29 * *", "01/01/2015 00:00:00", "28/02/2015 00:00:00");
+            HasOccurrence("0 0 */29 * *", "01/01/2015 00:00:00", "29/03/2015 00:00:00");
+            HasOccurrence("0 0 */29 * *", "01/01/2015 00:00:00", "27/04/2015 00:00:00");
+            HasOccurrence("0 0 */29 * *", "01/01/2015 00:00:00", "26/05/2015 00:00:00");
+            HasOccurrence("0 0 */29 * *", "01/01/2015 00:00:00", "24/06/2015 00:00:00");
         }
 
         [Test, ExpectedException(typeof(CrontabException))]
@@ -745,6 +779,18 @@ namespace NCrontab.Tests
         {
             var schedule = CrontabSchedule.Parse(cronExpression, new ParseOptions { IncludingSeconds = includingSeconds });
             Assert.IsFalse(schedule.HasOccurrence(Time(timeString)));
+        }
+
+        static void HasOccurrence(string cronExpression, string start, string timeString, bool includingSeconds = false)
+        {
+            var schedule = CrontabSchedule.Parse(cronExpression, new ParseOptions { IncludingSeconds = includingSeconds });
+            Assert.IsTrue(schedule.HasOccurrence(Time(start), Time(timeString)));
+        }
+
+        static void HasNotOccurrence(string cronExpression, string start, string timeString, bool includingSeconds = false)
+        {
+            var schedule = CrontabSchedule.Parse(cronExpression, new ParseOptions { IncludingSeconds = includingSeconds });
+            Assert.IsFalse(schedule.HasOccurrence(Time(start), Time(timeString)));
         }
 
         static void TimeCron(TimeSpan limit, ThreadStart test)

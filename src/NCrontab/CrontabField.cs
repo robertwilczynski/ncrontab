@@ -35,7 +35,7 @@ namespace NCrontab
     [Serializable]
     public sealed class CrontabField : ICrontabField
     {
-        readonly BitArray _bits;
+        internal readonly BitArray Bits;
         /* readonly */
         int _minValueSet;
         /* readonly */
@@ -43,6 +43,7 @@ namespace NCrontab
         /* readonly */
         int _occurrence;
         readonly CrontabFieldImpl _impl;
+        public int? Every { get; private set; }
 
         /// <summary>
         /// Parses a crontab field expression given its kind.
@@ -125,9 +126,9 @@ namespace NCrontab
                 throw new ArgumentNullException("impl");
 
             _impl = impl;
-            _bits = new BitArray(impl.ValueCount);
+            Bits = new BitArray(impl.ValueCount);
 
-            _bits.SetAll(false);
+            Bits.SetAll(false);
             _minValueSet = int.MaxValue;
             _maxValueSet = -1;
             _occurrence = 0;
@@ -157,7 +158,7 @@ namespace NCrontab
 
             for (var i = startIndex; i <= lastIndex; i++)
             {
-                if (_bits[i])
+                if (Bits[i])
                     return IndexToValue(i);
             }
 
@@ -180,7 +181,7 @@ namespace NCrontab
 
         public bool Contains(int value)
         {
-            return _bits[ValueToIndex(value)];
+            return Bits[ValueToIndex(value)];
         }
 
         /// <summary>
@@ -189,7 +190,7 @@ namespace NCrontab
 
         public bool Match(DateTime dateTime)
         {
-            var contains = Contains((int)dateTime.DayOfWeek);
+            var contains = Contains(GetValue(_impl.Kind, dateTime));
             if (contains && _occurrence > 0)
             {
                 return _occurrence == Occurrence(dateTime);
@@ -198,9 +199,74 @@ namespace NCrontab
         }
 
         /// <summary>
+        /// Determines if the given date matche with the field.
+        /// </summary>
+
+        public bool Match(DateTime startDate, DateTime dateTime)
+        {
+            if (Every.HasValue == false)
+                return Match(dateTime);
+
+            while (startDate <= dateTime)
+            {
+                startDate = Next(_impl.Kind, startDate, Every.Value);
+            }
+
+            startDate = Next(_impl.Kind, startDate, -Every.Value);
+
+            return Match(_impl.Kind, startDate, dateTime);
+        }
+
+        private static int GetValue(CrontabFieldKind kind, DateTime dateTime)
+        {
+            switch (kind)
+            {
+                case CrontabFieldKind.Second:
+                    return dateTime.Second;
+                case CrontabFieldKind.Minute:
+                    return dateTime.Minute;
+                case CrontabFieldKind.Hour:
+                    return dateTime.Hour;
+                case CrontabFieldKind.Day:
+                    return dateTime.Day;
+                case CrontabFieldKind.Month:
+                    return dateTime.Month;
+                case CrontabFieldKind.DayOfWeek:
+                    return (int)dateTime.DayOfWeek;
+            }
+
+            return -1;
+        }
+
+        private static bool Match(CrontabFieldKind kind, DateTime startDate, DateTime dateTime)
+        {
+            return GetValue(kind, startDate) == GetValue(kind, dateTime);
+        }
+
+        private static DateTime Next(CrontabFieldKind kind, DateTime dateTime, int interval)
+        {
+            switch (kind)
+            {
+                case CrontabFieldKind.Second:
+                    return dateTime.AddSeconds(interval);
+                case CrontabFieldKind.Minute:
+                    return dateTime.AddMinutes(interval);
+                case CrontabFieldKind.Hour:
+                    return dateTime.AddHours(interval);
+                default:
+                case CrontabFieldKind.Day:
+                    return dateTime.AddDays(interval);
+                case CrontabFieldKind.Month:
+                    return dateTime.AddMonths(interval);
+                case CrontabFieldKind.DayOfWeek:
+                    return dateTime.AddDays(interval * 7);
+            }
+        }
+
+        /// <summary>
         /// Get day of week occurrence in the month
         /// </summary>
-        
+
         static int Occurrence(DateTime dateTime)
         {
             return (int)Math.Ceiling(dateTime.Day / 7.0);
@@ -224,6 +290,7 @@ namespace NCrontab
             var minValue = _impl.MinValue;
             var maxValue = _impl.MaxValue;
             _occurrence = occurrence;
+            Every = interval <= 1 ? (int?)null : interval;
 
             if (start == end)
             {
@@ -237,7 +304,7 @@ namespace NCrontab
                     {
                         _minValueSet = minValue;
                         _maxValueSet = maxValue;
-                        _bits.SetAll(true);
+                        Bits.SetAll(true);
                         return success;
                     }
 
@@ -293,7 +360,7 @@ namespace NCrontab
             //
 
             for (i = start - minValue; i <= (end - minValue); i += interval)
-                _bits[i] = true;
+                Bits[i] = true;
 
             //
             // Make sure we remember the minimum value set so far Keep track of
